@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<!--
+  ╔══════════════════════════════════════════════════════════════════╗
+  ║  TASK A — ADD THYMELEAF                                          ║
+  ╠══════════════════════════════════════════════════════════════════╣
+  ║  This is a plain static HTML file — the animal list is           ║
+  ║  hard-coded and the form does not work yet.                      ║
+  ║                                                                  ║
+  ║  Your job:                                                       ║
+  ║  1. Move this file to:                                           ║
+  ║       src/main/resources/templates/animals.html                  ║
+  ║  2. Add the Thymeleaf namespace to <html>:                       ║
+  ║       xmlns:th="http://www.thymeleaf.org"                        ║
+  ║  3. Create AnimalPageController (in controller/)                 ║
+  ║       @GetMapping("/animals")  → pass List<AnimalResponse>       ║
+  ║       @GetMapping("/animals/new") → pass empty AnimalForm        ║
+  ║       @PostMapping("/animals") → call service, redirect          ║
+  ║  4. Replace the hard-coded <li> elements with th:each            ║
+  ║  5. Add th:src / th:alt to the <img> tags                        ║
+  ║     Keep width/height/object-fit as plain HTML attributes        ║
+  ║  6. Update the form action with th:action and bind               ║
+  ║     fields with th:object / th:field                             ║
+  ║                                                                  ║
+  ║  ROLE-BASED UI (adoption feature — see SecurityConfig):          ║
+  ║  7. In AnimalPageController, expose "isAdmin"/"isUser" model     ║
+  ║     attributes, derived from the current Authentication's        ║
+  ║     authorities (ROLE_ADMIN / ROLE_USER — a logged-in user is    ║
+  ║     never both).                                                 ║
+  ║  8. Only render the "Add a new animal" section when isAdmin is   ║
+  ║     true (the backend also rejects POST /animals for non-admins).║
+  ║  9. Per animal, show an "Adopt" button only when isUser is true  ║
+  ║     AND the animal's status is AVAILABLE. It should POST to      ║
+  ║       /api/animals/{id}/adopt                                    ║
+  ║ 10. When isAdmin is true and the animal is ADOPTED, display its  ║
+  ║     adoptionNote (already computed server-side in                ║
+  ║     AnimalResponse) next to the status — everyone else just      ║
+  ║     sees the bare "ADOPTED" status.                              ║
+  ╚══════════════════════════════════════════════════════════════════╝
+-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shelter Animals</title>
+  <style>
+    body { font-family: sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; }
+    h1 { border-bottom: 2px solid #333; padding-bottom: 0.4rem; }
+    h2 { margin-top: 2rem; }
+    ul { list-style: none; padding: 0; }
+    li { border: 1px solid #ddd; border-radius: 6px; padding: 1rem; margin-bottom: 1rem; display: flex; gap: 1rem; align-items: flex-start; }
+    li img { width: 120px; height: 80px; object-fit: cover; border-radius: 4px; }
+    .info { flex: 1; }
+    .status-available { color: green; font-weight: bold; }
+    .status-adopted   { color: #999;  font-weight: bold; }
+    form { display: grid; gap: 0.5rem; max-width: 480px; margin-top: 1rem; }
+    label { font-weight: bold; }
+    input, select, textarea { padding: 0.4rem; border: 1px solid #ccc; border-radius: 4px; width: 100%; box-sizing: border-box; }
+    button { padding: 0.6rem 1.2rem; background: #2563eb; color: white; border: none; border-radius: 4px; cursor: pointer; width: fit-content; }
+    button:hover { background: #1d4ed8; }
+  </style>
+</head>
+<body>
+<nav>
+  <a href="/">Home</a>
+  <a href="/animals">All animals</a>
+  <a href="/animals/new" th:if="${isAdmin}">Add animal</a>
+</nav>
+
+  <main>
+    <h1>Shelter Animals</h1>
+
+    <section aria-label="Animal list">
+      <ul>
+        <li th:each="animal : ${animals}">
+          <img th:src="${animal.imageUrl}"
+               th:alt="${animal.name}"
+               width="300" height="200"
+               style="object-fit: cover;">
+          <div class="info">
+            <strong th:text="${animal.name}">Name</strong>
+            — <span th:text="${animal.type}">TYPE</span>
+            | <span th:text="${animal.breed}">Breed</span>
+            | Age: <span th:text="${animal.age}">0</span>
+            <span th:class="${animal.status.name() == 'ADOPTED'} ? 'status-adopted' : 'status-available'"
+                  th:text="${animal.status}">STATUS</span>
+            <span th:if="${isAdmin and animal.adoptionNote != null}" th:text="${animal.adoptionNote}"></span>
+            <p th:text="${animal.description}">Description</p>
+
+            <form th:if="${isUser and animal.status.name() == 'AVAILABLE'}"
+                  th:action="@{/api/animals/{id}/adopt(id=${animal.id})}" method="post">
+              <button type="submit">Adopt</button>
+            </form>
+          </div>
+        </li>
+      </ul>
+    </section>
+
+    <p th:if="${isAdmin}">
+      <a href="/animals/new" class="cta">Add a new animal</a>
+    </p>
+
+  </main>
+</body>
+</html>
