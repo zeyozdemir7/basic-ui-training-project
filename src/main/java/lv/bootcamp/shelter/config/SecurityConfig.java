@@ -100,7 +100,8 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.ignoringRequestMatchers("/api/**"))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.GET,
-                                "/", "/*.html", "/css/**", "/js/**", "/images/**", "/favicon.ico")
+                                "/", "/", "/*.html", "/css/**", "/js/**", "/images/**", "/favicon.ico",
+                                "/swagger-ui/**", "/v3/api-docs/**")
                         .permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/animals/adopted").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/animals/**").permitAll()
